@@ -48,7 +48,39 @@ if ((M_FILES > ${#FILES[@]})); then
    M_FILES=${#FILES[@]}
 fi
     
-echo "Список файлов для переноса в архив:"
+echo "Список файлов подходящих для переноса в архив:"
 printf '%s\n' "${FILES[@]}"
 
+mkdir -p "$BACKUP"
+
+if ! mkdir -p "$BACKUP"; then
+    echo "Ошибка: невозможно создать каталог '$BACKUP'."
+    exit 1
+fi
+
 ARCHIVE_NAME="$BACKUP/backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+
+SELECTED_FILES=()
+
+for (( i=0; i<M_FILES; i++ )); do
+    SELECTED_FILES+=("$(basename "${FILES[$i]}")")
+done
+
+if (( ${#SELECTED_FILES[@]} == 0 )); then
+    echo "Нет файлов для архивации."
+    exit 0
+fi
+
+echo "Будут архивированы следующие файлы:"
+for file in "${SELECTED_FILES[@]}"; do
+    echo "  $file"
+done
+
+if tar -czf "$ARCHIVE_NAME" -C "$FOLDER" "${SELECTED_FILES[@]}"; then
+    echo "Успех! Архив сохранен в: $ARCHIVE_NAME"
+else
+    echo "Ошибка при создании архива."
+    exit 1
+fi
+
+exit 0
