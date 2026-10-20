@@ -27,8 +27,8 @@ if ! [[ "$M_FILES" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 CURRENT_SIZE=$(du -s "$FOLDER" | cut -f1)
-echo "Current folder size: ${CURRENT_SIZE} КB"
-FOLDER_THRESHOLD=1024 #KB
+echo "Current folder size: ${CURRENT_SIZE} byte"
+FOLDER_THRESHOLD=1048576 #byte
 
 USAGE_PERCENT=$(( CURRENT_SIZE * 100 / FOLDER_THRESHOLD ))
 echo "Current occupancy as a percentage: ${USAGE_PERCENT}%"
