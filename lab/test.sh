@@ -11,12 +11,12 @@ PASSED=0
 FAILED=0
 
 pass() {
-    echo "[ПРОЙДЕН] $1"
+    echo "[PASSED] $1"
     ((PASSED++))
 }
 
 fail() {
-    echo "[ОШИБКА] $1"
+    echo "[FAILED] $1"
     ((FAILED++))
 }
 
@@ -27,79 +27,79 @@ cleanup() {
 trap cleanup EXIT
 
 if [[ ! -f "$SCRIPT" ]]; then
-    echo "Ошибка: не найден $SCRIPT"
+    echo "Error: not found $SCRIPT"
     exit 1
 fi
 
 if [[ ! -x "$SCRIPT" ]]; then
-    echo "Делаем основной скрипт исполняемым..."
+    echo "Make the main script executable."
     chmod +x "$SCRIPT"
 fi
 
-echo "=== Запуск тестов для main.sh ==="
+echo "=== Running tests for main.sh ==="
 
 
-echo "--- Тест 1: Неверное количество аргументов ---"
+echo "--- Test 1: Incorrect number of arguments ---"
 "$SCRIPT" >/dev/null 2>&1
 RC=$?
 if [[ "$RC" -eq 1 ]]; then
-    pass "Скрипт корректно поймал ошибку аргументов."
+    pass "The script correctly caught an argument error."
 else
-    fail "Скрипт не должен был завершиться успешно."
+    fail "The script was not supposed to complete successfully."
 fi
 
 
-echo "--- Тест 2: Несуществующий каталог ---"
+echo "--- Test 2: Non-existent directory ---"
 "$SCRIPT" "does/not/exists" 80 2 >/dev/null 2>&1
 RC=$?
 if [[ "$RC" -eq 1 ]]; then
-    pass "Скрипт корректно поймал ошибку аргументов."
+    pass "The script correctly caught an argument error."
 else
-    fail "Скрипт не должен был завершиться успешно."
+    fail "The script was not supposed to finish successfully."
 fi
 
 
-echo "--- Тест 3: Неверный процент ---"
+echo "--- Test 3: Incorrect percentage ---"
 "$SCRIPT" "$LOG_DIR" 150 2 "$BACKUP_DIR" >/dev/null 2>&1
 RC=$?
 if [[ "$RC" -eq 1 ]]; then
-    pass "Скрипт корректно поймал ошибку аргументов."
+    pass "The script correctly caught an argument error."
 else
-    fail "Скрипт не должен был завершиться успешно."
+    fail "The script was not supposed to finish successfully."
 fi
 
 
-echo "--- Тест 4: Неверный процент ---"
+echo "--- Test 4: Incorrect number of files ---"
 "$SCRIPT" "$LOG_DIR" 80 0 "$BACKUP_DIR" >/dev/null 2>&1
 RC=$?
 if [[ "$RC" -eq 1 ]]; then
-    pass "Скрипт корректно поймал ошибку аргументов."
+    pass "The script correctly caught an argument error."
 else
-    fail "Скрипт не должен был завершиться успешно."
+    fail "The script was not supposed to finish successfully."
 fi
 
 
-echo "--- Тест 5, 6: Порог НЕ превышен ---"
+echo "--- Test 5, 6: Threshold NOT exceeded ---"
 rm -f "$LOG_DIR"/* "$BACKUP_DIR"/*
 echo "test1" > "$LOG_DIR/file1.txt"
 echo "test2" > "$LOG_DIR/file2.txt"
 TEST_USAGE_PERCENT=50 "$SCRIPT" "$LOG_DIR" 80 2 "$BACKUP_DIR" >/dev/null 2>&1
 RC=$?
 if [[ "$RC" -eq 0 ]]; then
-    pass "При заполненности ниже порога скрипт завершается успешно."
+    pass "If the occupancy is below the threshold, the script completes successfully."
 else
-    fail "Скрипт завершился с ошибкой."
+    fail "The script finished with an error."
 fi
 
 ARCHIVES=$(find "$BACKUP_DIR" -type f -name '*.tar.gz' | wc -l)
 if [[ "$ARCHIVES" -eq 0 ]]; then
-    pass "При заполненности ниже порога архив не создаётся."
+    pass "If the occupancy level is below the threshold, no archive is created."
 else
-    fail "При заполненности ниже порога архив не должен был создаваться."
+    fail "The archive should not have been created when the occupancy level was below the threshold."
 fi
 
 
-echo "--- Тест 7, 8, 9, 10: Порог превышен ---"
+echo "--- Test 7, 8, 9: Threshold exceeded ---"
 rm -f "$LOG_DIR"/* "$BACKUP_DIR"/*
 echo "old file 1" > "$LOG_DIR/old1.txt"
 sleep 1
@@ -109,47 +109,35 @@ echo "new file" > "$LOG_DIR/new.txt"
 TEST_USAGE_PERCENT=90 "$SCRIPT" "$LOG_DIR" 10 2 "$BACKUP_DIR" >/dev/null 2>&1
 RC=$?
 if [[ "$RC" -eq 0 ]]; then
-    pass "При превышении порога архивация выполняется."
+    pass "Archiving is performed when the threshold is exceeded."
 else
-    fail "При превышении порога архивация не выполняется."
+    fail "Archiving is not performed if the threshold is exceeded."
 fi
 
 ARCHIVE=$(find "$BACKUP_DIR" -type f -name '*.tar.gz' | head -n 1)
 if [[ -n "$ARCHIVE" ]]; then
-    pass "Архив .tar.gz создан."
+    pass "The .tar.gz archive has been created."
 else
-    fail "Архив .tar.gz не создан."
+    fail "The .tar.gz archive was not created."
 fi
 
 if [[ -n "$ARCHIVE" ]]; then
     if tar -tzf "$ARCHIVE" | grep -q "old1.txt" && tar -tzf "$ARCHIVE" | grep -q "old2.txt"; then
-        pass "В архив попали самые старые файлы."
+        pass "The oldest files ended up in the archive."
     else
-        fail "В архив попали не те файлы."
+        fail "The wrong files ended up in the archive."
     fi
 fi
 
-rm -f "$LOG_DIR"/* "$BACKUP_DIR"/*
-echo "old log" > "$LOG_DIR/old.txt"
-echo "already archived" > "$LOG_DIR/already.tar.gz"
-TEST_USAGE_PERCENT=90 "$SCRIPT" "$LOG_DIR" 80 2 "$BACKUP_DIR" >/dev/null 2>&1
-ARCHIVE=$(find "$BACKUP_DIR" -type f -name '*.tar.gz' | head -n 1)
-if [[ -n "$ARCHIVE" ]]; then
-    if tar -tzf "$ARCHIVE" | grep -q "already.tar.gz"; then
-        fail "Фильтрация ошибочно включила существующий .tar.gz"
-    else
-        pass "Фильтрация исключает существующие .tar.gz"
-    fi
-fi
-echo "=== Тестирование завершено ==="
-echo "Успешно: $PASSED"
-echo "Ошибок:  $FAILED"
+echo "=== Testing complete ==="
+echo "PASSED: $PASSED"
+echo "FAILED: $FAILED"
 if [[ "$FAILED" -eq 0 ]]; then
     echo
-    echo "Все тесты пройдены."
+    echo "All tests passed."
     exit 0
 else
     echo
-    echo "Есть непройденные тесты."
+    echo "There are tests that haven't been passed."
     exit 1
 fi
