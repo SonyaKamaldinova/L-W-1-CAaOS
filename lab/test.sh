@@ -112,6 +112,7 @@ sleep 1
 echo "old file 2" > "$LOG_DIR/old2.txt"
 sleep 1
 echo "new file" > "$LOG_DIR/new.txt"
+truncate -s 50K "$LOG_DIR/filename.ext"
 "$SCRIPT" "$LOG_DIR" 1 2 "$BACKUP_DIR" >/dev/null 2>&1
 RC=$?
 if [[ "$RC" -eq 0 ]]; then
@@ -128,6 +129,7 @@ sleep 1
 echo "old file 2" > "$LOG_DIR/old2.txt"
 sleep 1
 echo "new file" > "$LOG_DIR/new.txt"
+truncate -s 50K "$LOG_DIR/filename.ext"
 "$SCRIPT" "$LOG_DIR" 1 2 "$BACKUP_DIR" >/dev/null 2>&1
 ARCHIVE=$(find "$BACKUP_DIR" -type f -name '*.tar.gz' | head -n 1)
 if [[ -n "$ARCHIVE" ]]; then
@@ -144,6 +146,7 @@ sleep 1
 echo "old file 2" > "$LOG_DIR/old2.txt"
 sleep 1
 echo "new file" > "$LOG_DIR/new.txt"
+truncate -s 50K "$LOG_DIR/filename.ext"
 "$SCRIPT" "$LOG_DIR" 1 2 "$BACKUP_DIR" >/dev/null 2>&1
 if [[ -n "$ARCHIVE" ]]; then
     if tar -tzf "$ARCHIVE" | grep -q "old1.txt" && tar -tzf "$ARCHIVE" | grep -q "old2.txt"; then
