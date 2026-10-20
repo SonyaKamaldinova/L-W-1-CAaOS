@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -ne 4 ]; then
-    echo "Использование: $0 <путь_к_папке_с_логами> <процент_заполнения> <кол_во_стары_файлов> <путь_к_папке_с_архивом>"
+    echo "Using: $0 <directory_with_logs> <prosent> <number_of_old_files> <directory_with_archive>"
     exit 1
 fi
 
@@ -11,36 +11,36 @@ M_FILES="$3"
 BACKUP="$4"
 
 if [ ! -d "$FOLDER" ]; then
-    echo "Ошибка: Указанная папка не существует."
+    echo "Error: The specified folder does not exist."
     exit 1
 fi
 
 if ! [[ "$THRESHOLD" =~ ^[0-9]+$ ]] || \
    (( THRESHOLD < 1 || THRESHOLD > 100 )); then
-    echo "Ошибка: порог должен быть целым числом от 1 до 100."
+    echo "Error: the threshold must be an integer from 1 to 100."
     exit 1
 fi
 
 if ! [[ "$M_FILES" =~ ^[1-9][0-9]*$ ]]; then
-    echo "Ошибка: количество файлов должно быть положительным числом."
+    echo "Error: the number of files must be a positive number."
     exit 1
 fi
 
 USAGE_PERCENT=$(df -P "$FOLDER" | awk 'NR==2 {gsub("%", "", $5); print $5}')
-echo "Текущая заполненность в процентах: ${USAGE_PERCENT}%"
-echo "Порог: ${THRESHOLD}%"
+echo "Current occupancy as a percentage: ${USAGE_PERCENT}%"
+echo "Threshold: ${THRESHOLD}%"
 
 if (( USAGE_PERCENT <= THRESHOLD )); then
-    echo "Порог не превышен. Архивация не требуется."
+    echo "The threshold has not been exceeded. Archiving is not required.."
     exit 0
 fi
 
-echo "Внимание: Превышен лимит! Начинается архивация старых файлов."
+echo "Attention: Limit exceeded! Archiving of old files is beginning."
 
-mapfile -t FILES < <(find "$FOLDER" -maxdepth 1 -type f ! -name '*.tar.gz' -printf '%T@ %p\n' |sort -n | cut -d' ' -f2-)
+mapfile -t FILES < <(find "$FOLDER" -maxdepth 1 -type f -printf '%T@ %p\n' |sort -n | cut -d' ' -f2-)
     
 if [ ${#FILES[@]} -eq 0 ]; then
-    echo "Файлы для архивации не найдены."
+    echo "No files found for archiving."
     exit 0
 fi
 
@@ -48,13 +48,13 @@ if ((M_FILES > ${#FILES[@]})); then
    M_FILES=${#FILES[@]}
 fi
     
-echo "Список файлов подходящих для переноса в архив:"
+echo "List of files suitable for moving to the archive:"
 printf '%s\n' "${FILES[@]}"
 
 mkdir -p "$BACKUP"
 
 if ! mkdir -p "$BACKUP"; then
-    echo "Ошибка: невозможно создать каталог '$BACKUP'."
+    echo "Error: unable to create directory '$BACKUP'."
     exit 1
 fi
 
@@ -67,19 +67,19 @@ for (( i=0; i<M_FILES; i++ )); do
 done
 
 if (( ${#SELECTED_FILES[@]} == 0 )); then
-    echo "Нет файлов для архивации."
+    echo "No files to archive."
     exit 0
 fi
 
-echo "Будут архивированы следующие файлы:"
+echo "The following files will be archived:"
 for file in "${SELECTED_FILES[@]}"; do
     echo "  $file"
 done
 
 if tar -czf "$ARCHIVE_NAME" -C "$FOLDER" "${SELECTED_FILES[@]}"; then
-    echo "Успех! Архив сохранен в: $ARCHIVE_NAME"
+    echo "Success! Archive saved in: $ARCHIVE_NAME"
 else
-    echo "Ошибка при создании архива."
+    echo "Error creating archive."
     exit 1
 fi
 
