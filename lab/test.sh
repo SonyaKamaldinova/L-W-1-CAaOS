@@ -139,7 +139,7 @@ else
 fi
 
 
-echo "--- Test 8: Threshold exceeded ---"
+echo "--- Test 9: Threshold exceeded ---"
 rm -f "$LOG_DIR"/* "$BACKUP_DIR"/*
 echo "old file 1" > "$LOG_DIR/old1.txt"
 sleep 1
