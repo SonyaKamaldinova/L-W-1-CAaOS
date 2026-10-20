@@ -26,7 +26,11 @@ if ! [[ "$M_FILES" =~ ^[1-9][0-9]*$ ]]; then
     exit 1
 fi
 
-USAGE_PERCENT=$(df -P "$FOLDER" | awk 'NR==2 {gsub("%", "", $5); print $5}')
+CURRENT_SIZE=$(du -s "$FOLDER" | cut -f1)
+echo "Current folder size: ${CURRENT_SIZE} КB"
+FOLDER_THRESHOLD=1024 #KB
+
+USAGE_PERCENT=$(( CURRENT_SIZE * 100 / FOLDER_THRESHOLD ))
 echo "Current occupancy as a percentage: ${USAGE_PERCENT}%"
 echo "Threshold: ${THRESHOLD}%"
 
