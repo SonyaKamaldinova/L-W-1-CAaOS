@@ -15,8 +15,7 @@ if [ ! -d "$FOLDER" ]; then
     exit 1
 fi
 
-if ! [[ "$THRESHOLD" =~ ^[0-9]+$ ]] || \
-   (( THRESHOLD < 1 || THRESHOLD > 100 )); then
+if ! [[ "$THRESHOLD" =~ ^[0-9]+$ ]] || (( THRESHOLD < 1 || THRESHOLD > 100 )); then
     echo "Error: the threshold must be an integer from 1 to 100."
     exit 1
 fi
@@ -26,9 +25,9 @@ if ! [[ "$M_FILES" =~ ^[1-9][0-9]*$ ]]; then
     exit 1
 fi
 
-CURRENT_SIZE=$(du -s "$FOLDER" | cut -f1)
+CURRENT_SIZE=$(du -sb "$FOLDER" | cut -f1)
 echo "Current folder size: ${CURRENT_SIZE} byte"
-FOLDER_THRESHOLD=1048576 #byte
+FOLDER_THRESHOLD=1048576 #1048576 byte = 1 MB
 
 USAGE_PERCENT=$(( CURRENT_SIZE * 100 / FOLDER_THRESHOLD ))
 echo "Current occupancy as a percentage: ${USAGE_PERCENT}%"
